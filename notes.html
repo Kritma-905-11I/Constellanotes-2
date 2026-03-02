@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luminary — Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02010a;--glow:#b388f0;--gold:#e2c97e;--white:#ede8ff;
+  --muted:rgba(195,182,230,0.42);--border:rgba(185,165,255,0.11);
+  --serif:'Cormorant Garamond',Georgia,serif;--sans:'Jost',system-ui,sans-serif;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  --star-hue:270;
+}
+html,body{min-height:100%;font-family:var(--sans);background:var(--bg);color:var(--white);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* Galaxy */
+#galaxy{position:fixed;inset:0;z-index:0;pointer-events:none}
+.orb{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:1}
+.orb-a{width:52vw;height:52vw;top:-16%;left:-9%;background:radial-gradient(circle,rgba(75,8,165,.13),transparent 70%)}
+.orb-b{width:44vw;height:44vw;bottom:-13%;right:-7%;background:radial-gradient(circle,rgba(12,25,155,.15),transparent 70%)}
+.orb-c{width:30vw;height:30vw;top:38%;left:36%;background:radial-gradient(circle,rgba(155,75,255,.07),transparent 70%)}
+
+/* Animations */
+@keyframes riseIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulseGlow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.1;transform:scale(.5)}}
+@keyframes dotP{0%,100%{opacity:.18;transform:scale(.65)}50%{opacity:1;transform:scale(1)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+
+/* Nav */
+.site-nav{position:fixed;top:0;left:0;right:0;z-index:60;padding:.85rem 2rem;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(2,1,10,.96),transparent);border-bottom:1px solid rgba(185,165,255,.05)}
+.nav-left{display:flex;align-items:center;gap:1.1rem}
+.nav-back{display:flex;align-items:center;gap:.5rem;background:transparent;border:1px solid rgba(185,165,255,.14);border-radius:2px;color:var(--muted);font-family:var(--sans);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.38rem .85rem;cursor:pointer;transition:all .25s;text-decoration:none}
+.nav-back:hover{color:var(--white);border-color:rgba(179,136,240,.4)}
+.nav-back svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2}
+.nav-logo{font-family:var(--serif);font-size:1.2rem;font-weight:300;letter-spacing:.15em;opacity:.5}
+.nav-logo em{font-style:italic;color:var(--glow)}
+.nav-actions{display:flex;align-items:center;gap:.7rem}
+.nav-btn{background:transparent;border:1px solid rgba(185,165,255,.14);border-radius:2px;color:var(--muted);font-family:var(--sans);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;padding:.38rem .85rem;cursor:pointer;transition:all .25s}
+.nav-btn:hover{color:var(--white);border-color:rgba(179,136,240,.4)}
+.nav-btn.primary{border-color:rgba(179,136,240,.4);color:var(--glow)}
+.nav-btn.primary:hover{background:rgba(179,136,240,.1);border-color:var(--glow);box-shadow:0 0 18px rgba(179,136,240,.15)}
+
+/* Main layout */
+.page-wrap{position:relative;z-index:10;max-width:860px;margin:0 auto;padding:5.5rem 2rem 4rem;opacity:0;animation:riseIn .7s .1s var(--ease) forwards}
+
+/* Star header */
+.star-header{display:flex;align-items:center;gap:1.4rem;margin-bottom:2.4rem;padding-bottom:1.8rem;border-bottom:1px solid var(--border)}
+.star-emblem{position:relative;flex-shrink:0;width:64px;height:64px;display:flex;align-items:center;justify-content:center}
+.star-emblem svg{width:64px;animation:pulseGlow 2.5s ease-in-out infinite}
+.star-header-text{flex:1;min-width:0}
+.star-constellation-label{font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+.star-name-display{font-family:var(--serif);font-size:1.9rem;font-weight:300;letter-spacing:.06em;line-height:1.1;color:var(--white)}
+.star-meta{font-size:.58rem;letter-spacing:.12em;color:rgba(195,182,230,.25);margin-top:.3rem;text-transform:uppercase}
+
+/* Entries list sidebar + editor — two-col on wide, stacked on mobile */
+.notes-layout{display:grid;grid-template-columns:220px 1fr;gap:1.6rem;align-items:start}
+@media(max-width:700px){.notes-layout{grid-template-columns:1fr}}
+
+/* Entries sidebar */
+.entries-sidebar{position:sticky;top:5.5rem}
+.sidebar-title{font-size:.55rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-bottom:.85rem;padding-left:.1rem}
+.entries-list{display:flex;flex-direction:column;gap:.5rem;max-height:calc(100vh - 12rem);overflow-y:auto;padding-right:.3rem}
+.entries-list::-webkit-scrollbar{width:2px}
+.entries-list::-webkit-scrollbar-thumb{background:rgba(179,136,240,.22);border-radius:2px}
+
+.entry-item{padding:.7rem .9rem;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .22s;background:rgba(255,255,255,.02);position:relative;overflow:hidden}
+.entry-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:hsla(var(--star-hue),70%,65%,.5);transform:scaleY(0);transition:transform .25s var(--ease)}
+.entry-item:hover,.entry-item.active{border-color:rgba(179,136,240,.22);background:rgba(179,136,240,.05)}
+.entry-item.active::before,.entry-item:hover::before{transform:scaleY(1)}
+.entry-item-title{font-family:var(--serif);font-size:.9rem;font-weight:300;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.entry-item-date{font-size:.54rem;letter-spacing:.1em;color:var(--muted);margin-top:.22rem;text-transform:uppercase}
+.entry-item-preview{font-size:.62rem;color:rgba(195,182,230,.3);margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.new-entry-btn{width:100%;margin-bottom:.85rem;padding:.6rem;background:linear-gradient(135deg,rgba(90,38,196,.18),rgba(26,36,114,.18));border:1px solid rgba(179,136,240,.24);border-radius:3px;color:var(--glow);font-family:var(--sans);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.new-entry-btn:hover{background:rgba(179,136,240,.12);border-color:rgba(179,136,240,.5);box-shadow:0 0 18px rgba(179,136,240,.1)}
+.new-entry-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2}
+
+.empty-entries{text-align:center;padding:1.8rem .5rem;color:rgba(195,182,230,.2);font-size:.65rem;letter-spacing:.1em;line-height:1.8}
+
+/* Editor panel */
+.editor-panel{display:flex;flex-direction:column;gap:.9rem;opacity:0;animation:fadeIn .5s .3s forwards}
+
+/* Title input */
+.entry-title-wrap{position:relative}
+.entry-title-input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);padding:.5rem .1rem .6rem;font-family:var(--serif);font-size:2.1rem;font-weight:300;letter-spacing:.04em;color:var(--white);outline:none;transition:border-color .3s;caret-color:var(--glow)}
+.entry-title-input::placeholder{color:rgba(195,182,230,.15)}
+.entry-title-input:focus{border-bottom-color:rgba(179,136,240,.45)}
+
+/* Colour picker row */
+.colour-bar{display:flex;align-items:center;gap:.85rem;padding:.5rem 0;flex-wrap:wrap}
+.colour-bar-label{font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.colour-dots{display:flex;gap:.55rem;flex-wrap:wrap}
+.cdot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .2s,border-color .2s}
+.cdot:hover{transform:scale(1.25)}
+.cdot.active{border-color:var(--white);transform:scale(1.28);box-shadow:0 0 10px currentColor}
+
+/* Toolbar */
+.editor-toolbar{display:flex;align-items:center;gap:.3rem;padding:.45rem .6rem;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:3px;flex-wrap:wrap}
+.tool-btn{background:transparent;border:none;padding:.3rem .45rem;color:var(--muted);cursor:pointer;border-radius:2px;font-family:var(--sans);font-size:.72rem;transition:all .18s;min-width:28px;display:flex;align-items:center;justify-content:center}
+.tool-btn:hover{color:var(--white);background:rgba(179,136,240,.1)}
+.tool-btn.active{color:var(--glow);background:rgba(179,136,240,.12)}
+.tool-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.tool-divider{width:1px;height:16px;background:var(--border);margin:0 .2rem}
+
+/* Content editable area */
+.entry-body{min-height:340px;padding:1.2rem .1rem;font-family:var(--serif);font-size:1.08rem;font-weight:300;line-height:1.85;color:var(--white);outline:none;caret-color:var(--glow);border-bottom:1px solid var(--border);transition:border-color .3s}
+.entry-body:focus{border-bottom-color:rgba(179,136,240,.3)}
+.entry-body:empty::before{content:attr(data-placeholder);color:rgba(195,182,230,.14);pointer-events:none;font-style:italic}
+.entry-body p{margin-bottom:.65em}
+.entry-body h1,.entry-body h2,.entry-body h3{font-family:var(--serif);font-weight:300;letter-spacing:.04em;margin-bottom:.5em;color:var(--white)}
+.entry-body h1{font-size:1.7rem}
+.entry-body h2{font-size:1.35rem}
+.entry-body h3{font-size:1.1rem}
+.entry-body strong{font-weight:500;color:var(--white)}
+.entry-body em{font-style:italic;color:rgba(225,205,255,.85)}
+.entry-body blockquote{border-left:2px solid rgba(179,136,240,.4);padding-left:1rem;margin:1rem 0;color:var(--muted);font-style:italic}
+.entry-body ul,
+.entry-body ol{margin:.5em 0 .5em 1.4em}
+.entry-body li{margin-bottom:.3em}
+.entry-body a{color:var(--glow);text-decoration:none;border-bottom:1px solid rgba(179,136,240,.3)}
+
+/* Footer row */
+.editor-footer{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;flex-wrap:wrap;gap:.7rem}
+.word-count{font-size:.57rem;letter-spacing:.12em;color:rgba(195,182,230,.2);text-transform:uppercase}
+.save-row{display:flex;gap:.7rem;align-items:center}
+.auto-save-indicator{font-size:.55rem;letter-spacing:.12em;color:rgba(195,182,230,.22);text-transform:uppercase;opacity:0;transition:opacity .4s}
+.auto-save-indicator.show{opacity:1}
+.btn-save{padding:.65rem 2.2rem;background:linear-gradient(135deg,rgba(90,38,196,.45),rgba(26,36,114,.45));border:1px solid rgba(179,136,240,.36);border-radius:2px;color:var(--white);font-family:var(--sans);font-size:.65rem;letter-spacing:.24em;text-transform:uppercase;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.btn-save::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(179,136,240,.12),transparent);opacity:0;transition:opacity .3s}
+.btn-save:hover::before{opacity:1}
+.btn-save:hover{border-color:rgba(179,136,240,.7);box-shadow:0 0 22px rgba(179,136,240,.15);transform:translateY(-1px)}
+.btn-delete{padding:.65rem 1rem;background:transparent;border:1px solid rgba(232,120,120,.2);border-radius:2px;color:rgba(232,120,120,.5);font-family:var(--sans);font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .3s}
+.btn-delete:hover{border-color:rgba(232,120,120,.6);color:rgba(232,120,120,.9);background:rgba(232,120,120,.06)}
+
+/* Empty state (no entry selected) */
+.empty-editor{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:380px;text-align:center;padding:2rem;opacity:.35}
+.empty-editor svg{width:54px;margin-bottom:1.2rem;opacity:.3}
+.empty-editor p{font-family:var(--serif);font-size:1.1rem;font-style:italic;color:var(--muted);line-height:1.7}
+.empty-editor span{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(195,182,230,.2);margin-top:.5rem}
+
+/* Loading dots */
+.loading-dots{display:flex;gap:7px;justify-content:center;padding:2.5rem 0}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--glow);animation:dotP 1.3s ease-in-out infinite}
+.loading-dots span:nth-child(2){animation-delay:.22s}.loading-dots span:nth-child(3){animation-delay:.44s}
+
+/* Toast */
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(16px);background:linear-gradient(135deg,rgba(20,4,48,.97),rgba(6,14,56,.97));border:1px solid var(--border);border-radius:3px;padding:.68rem 1.9rem;font-size:.68rem;letter-spacing:.1em;color:var(--white);z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Delete confirm modal */
+#del-overlay{position:fixed;inset:0;z-index:200;background:rgba(2,1,10,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+#del-overlay.open{opacity:1;pointer-events:all}
+.del-modal{width:min(360px,92vw);padding:2.2rem;background:linear-gradient(148deg,rgba(40,4,30,.95),rgba(7,8,40,.95));border:1px solid rgba(232,120,120,.2);border-radius:3px;backdrop-filter:blur(30px);transform:translateY(14px);transition:transform .35s var(--ease);text-align:center}
+#del-overlay.open .del-modal{transform:translateY(0)}
+.del-modal h3{font-family:var(--serif);font-size:1.4rem;font-weight:300;margin-bottom:.5rem}
+.del-modal p{font-size:.7rem;color:var(--muted);letter-spacing:.06em;line-height:1.7;margin-bottom:1.5rem}
+.del-actions{display:flex;gap:.8rem;justify-content:center}
+.del-cancel{padding:.65rem 1.6rem;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--muted);font-family:var(--sans);font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .25s}
+.del-cancel:hover{color:var(--white);border-color:rgba(179,136,240,.3)}
+.del-confirm{padding:.65rem 1.6rem;background:rgba(232,120,120,.12);border:1px solid rgba(232,120,120,.4);border-radius:2px;color:rgba(232,120,120,.9);font-family:var(--sans);font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .3s}
+.del-confirm:hover{background:rgba(232,120,120,.22);border-color:rgba(232,120,120,.7)}
+</style>
+</head>
+<body>
+
+<canvas id="galaxy"></canvas>
+<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
+
+<!-- Nav -->
+<nav class="site-nav">
+  <div class="nav-left">
+    <a class="nav-back" href="profile.html">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Constellations
+    </a>
+    <div class="nav-logo"><em>Luminary</em></div>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-btn primary" onclick="saveCurrentEntry()">Save &#10022;</button>
+    <button class="nav-btn" onclick="doLogout()">Log Out</button>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="page-wrap">
+
+  <!-- Star header -->
+  <div class="star-header">
+    <div class="star-emblem">
+      <svg id="header-star-svg" viewBox="0 0 100 95" xmlns="http://www.w3.org/2000/svg">
+        <polygon id="header-star-poly" points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="rgba(179,136,240,.18)" stroke="rgba(179,136,240,.85)" stroke-width="1.8"/>
+      </svg>
+    </div>
+    <div class="star-header-text">
+      <p class="star-constellation-label">Constellation</p>
+      <h1 class="star-name-display" id="star-name-display">—</h1>
+      <p class="star-meta" id="star-meta"></p>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="notes-layout">
+
+    <!-- Sidebar: entries list -->
+    <div class="entries-sidebar">
+      <button class="new-entry-btn" onclick="newEntry()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Entry
+      </button>
+      <p class="sidebar-title">All Entries</p>
+      <div class="entries-list" id="entries-list">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+
+    <!-- Editor panel -->
+    <div id="editor-area">
+      <!-- Shows empty state until entry selected -->
+      <div class="empty-editor" id="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+        </svg>
+        <p>Select an entry to read it,<br>or create a new one</p>
+        <span>Your memories live here</span>
+      </div>
+
+      <!-- Editor (hidden until entry selected/created) -->
+      <div class="editor-panel" id="editor-panel" style="display:none;opacity:0;animation:none">
+
+        <!-- Entry title -->
+        <div class="entry-title-wrap">
+          <input type="text" class="entry-title-input" id="entry-title" placeholder="Give this memory a name...">
+        </div>
+
+        <!-- Colour picker -->
+        <div class="colour-bar">
+          <span class="colour-bar-label">Colour</span>
+          <div class="colour-dots" id="colour-dots"></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="editor-toolbar">
+          <button class="tool-btn" onclick="fmt('bold')" title="Bold">
+            <svg viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 010 8H6z"/><path d="M6 12h9a4 4 0 010 8H6z"/></svg>
+          </button>
+          <button class="tool-btn" onclick="fmt('italic')" title="Italic">
+            <svg viewBox="0 0 24 24"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
+          </button>
+          <button class="tool-btn" onclick="fmt('underline')" title="Underline">
+            <svg viewBox="0 0 24 24"><path d="M6 3v7a6 6 0 006 6 6 6 0 006-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+          </button>
+          <div class="tool-divider"></div>
+          <button class="tool-btn" onclick="fmt('formatBlock','h2')" title="Heading">H</button>
+          <button class="tool-btn" onclick="fmt('insertUnorderedList')" title="List">
+            <svg viewBox="0 0 24 24"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+          </button>
+          <button class="tool-btn" onclick="fmt('formatBlock','blockquote')" title="Quote">
+            <svg viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+          </button>
+          <div class="tool-divider"></div>
+          <button class="tool-btn" onclick="fmt('removeFormat')" title="Clear formatting">
+            <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3"/><path d="M5 20h6"/><path d="M13 4L8 20"/><line x1="17" y1="11" x2="22" y2="17"/><line x1="22" y1="11" x2="17" y2="17"/></svg>
+          </button>
+        </div>
+
+        <!-- Body text -->
+        <div class="entry-body" id="entry-body" contenteditable="true"
+          data-placeholder="Write freely... this is your private space."></div>
+
+        <!-- Footer -->
+        <div class="editor-footer">
+          <span class="word-count" id="word-count">0 words</span>
+          <div class="save-row">
+            <span class="auto-save-indicator" id="auto-save-indicator">&#10022; Saved</span>
+            <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+            <button class="btn-save" onclick="saveCurrentEntry()">Save Entry</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Delete confirm -->
+<div id="del-overlay" onclick="if(event.target===this)closeDelete()">
+  <div class="del-modal">
+    <h3>Delete this entry?</h3>
+    <p>This memory will be gone forever.<br>The stars cannot bring it back.</p>
+    <div class="del-actions">
+      <button class="del-cancel" onclick="closeDelete()">Keep It</button>
+      <button class="del-confirm" onclick="deleteEntry()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ GALAXY ══ */
+(function(){
+  const cv=document.getElementById('galaxy'),cx=cv.getContext('2d');
+  let W,H,S=[],C=[];
+  const R=(a,b)=>a+Math.random()*(b-a);
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;build()}
+  function build(){
+    S=[];
+    for(let i=0,n=Math.floor(W*H/1800);i<n;i++){
+      const b=Math.random()<.07;
+      S.push({x:R(0,W),y:R(0,H),r:b?R(.85,2):R(.18,.75),a:R(.28,1),sp:R(.004,.018),of:R(0,Math.PI*2),c:Math.random()<.13?'#e2c97e':'#ede8ff'});
+    }
+    C=[];
+    for(let c=0;c<7;c++){
+      const px=R(55,W-55),py=R(55,H-55),pts=[];
+      for(let i=0;i<Math.floor(R(3,6));i++) pts.push({x:px+R(-90,90),y:py+R(-70,70)});
+      C.push(pts);
+    }
+  }
+  function draw(t){
+    const g=cx.createRadialGradient(W*.44,H*.41,0,W*.5,H*.5,Math.max(W,H)*.76);
+    g.addColorStop(0,'#0c0422');g.addColorStop(.5,'#050210');g.addColorStop(1,'#02010a');
+    cx.fillStyle=g;cx.fillRect(0,0,W,H);
+    const nb=cx.createRadialGradient(W*.2,H*.28,0,W*.2,H*.28,W*.3);
+    nb.addColorStop(0,'rgba(80,6,170,.055)');nb.addColorStop(1,'transparent');
+    cx.fillStyle=nb;cx.fillRect(0,0,W,H);
+    C.forEach(pts=>{
+      cx.beginPath();pts.forEach((p,i)=>i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y));
+      cx.strokeStyle='rgba(176,156,255,.04)';cx.lineWidth=.5;cx.stroke();
+      pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,1,0,Math.PI*2);cx.fillStyle='rgba(195,178,255,.22)';cx.fill()});
+    });
+    S.forEach(s=>{
+      cx.globalAlpha=Math.max(.04,.2+.8*Math.abs(Math.sin(t*s.sp+s.of))*s.a);
+      cx.fillStyle=s.c;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();cx.globalAlpha=1;
+    });
+  }
+  window.addEventListener('resize',resize);resize();
+  (function loop(t){draw(t);requestAnimationFrame(loop)})();
+})();
+
+/* ══ APP ══ */
+const LIVE=false;
+const $=id=>document.getElementById(id);
+const esc=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
+
+// Session guard
+let SESSION=null;
+try{SESSION=JSON.parse(sessionStorage.getItem('lum_session')||'null')}catch{}
+if(!SESSION){window.location.replace('index.html')}
+
+// Current star
+let STAR=null;
+try{STAR=JSON.parse(sessionStorage.getItem('lum_current_star')||'null')}catch{}
+if(!STAR){window.location.replace('profile.html')}
+
+// State
+let ENTRIES=[];
+let currentEntryId=null;
+let autoSaveTimer=null;
+
+/* Colour palette */
+const PALETTE=[
+  {h:270,name:'Violet'},{h:198,name:'Sapphire'},{h:28,name:'Amber'},
+  {h:338,name:'Rose'},{h:156,name:'Emerald'},{h:2,name:'Crimson'},{h:182,name:'Aqua'}
+];
+let entryHue=STAR?STAR.color_hue:270;
+
+/* ══ INIT ══ */
+function init(){
+  // Set star header
+  const h=STAR.color_hue||270;
+  document.documentElement.style.setProperty('--star-hue',h);
+  $('header-star-poly').setAttribute('fill','hsla('+h+',60%,55%,0.18)');
+  $('header-star-poly').setAttribute('stroke','hsla('+h+',80%,72%,0.88)');
+  $('header-star-svg').style.filter='drop-shadow(0 0 14px hsla('+h+',80%,65%,0.55))';
+  $('star-name-display').textContent=STAR.star_name||'Unnamed Star';
+  const created=new Date(STAR.created_at||Date.now());
+  $('star-meta').textContent='Created '+created.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  buildColourPicker();
+  loadEntries();
+}
+
+/* ══ COLOUR PICKER ══ */
+function buildColourPicker(){
+  const row=$('colour-dots');row.innerHTML='';
+  PALETTE.forEach(({h,name})=>{
+    const d=document.createElement('div');
+    d.className='cdot'+(h===entryHue?' active':'');
+    d.title=name;
+    d.style.cssText='background:hsl('+h+',70%,55%);box-shadow:0 0 8px hsla('+h+',80%,60%,0.4)';
+    d.onclick=()=>{entryHue=h;buildColourPicker();triggerAutoSave()};
+    row.appendChild(d);
+  });
+}
+
+/* ══ ENTRIES ══ */
+function loadEntries(){
+  const key='lum_entries_'+SESSION.email+'_'+STAR.id;
+  try{ENTRIES=JSON.parse(localStorage.getItem(key)||'[]')}catch{ENTRIES=[]}
+  renderEntriesList();
+  // Auto-open most recent
+  if(ENTRIES.length>0){
+    selectEntry(ENTRIES[0].id);
+  }
+}
+
+function saveEntriesToStorage(){
+  const key='lum_entries_'+SESSION.email+'_'+STAR.id;
+  localStorage.setItem(key,JSON.stringify(ENTRIES));
+}
+
+function renderEntriesList(){
+  const list=$('entries-list');
+  list.innerHTML='';
+  if(ENTRIES.length===0){
+    list.innerHTML='<div class="empty-entries">No entries yet.<br>Write your first memory.</div>';
+    return;
+  }
+  ENTRIES.forEach(entry=>{
+    const el=document.createElement('div');
+    el.className='entry-item'+(entry.id===currentEntryId?' active':'');
+    el.onclick=()=>selectEntry(entry.id);
+    const d=new Date(entry.updated_at||entry.created_at);
+    const preview=entry.body?entry.body.replace(/<[^>]+>/g,'').slice(0,60):'';
+    el.innerHTML='<div class="entry-item-title">'+esc(entry.title||'Untitled')+'</div>'
+      +'<div class="entry-item-date">'+d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>'
+      +(preview?'<div class="entry-item-preview">'+esc(preview)+'</div>':'');
+    list.appendChild(el);
+  });
+}
+
+function selectEntry(id){
+  currentEntryId=id;
+  const entry=ENTRIES.find(e=>e.id===id);
+  if(!entry)return;
+  // Show editor
+  $('empty-state').style.display='none';
+  const panel=$('editor-panel');
+  panel.style.display='flex';
+  panel.style.opacity='0';
+  panel.style.animation='none';
+  void panel.offsetWidth; // reflow
+  panel.style.animation='fadeIn .4s var(--ease) forwards';
+  // Fill fields
+  $('entry-title').value=entry.title||'';
+  $('entry-body').innerHTML=entry.body||'';
+  entryHue=entry.color_hue||STAR.color_hue||270;
+  buildColourPicker();
+  updateWordCount();
+  renderEntriesList();
+  $('auto-save-indicator').classList.remove('show');
+}
+
+function newEntry(){
+  const entry={
+    id:Date.now(),
+    title:'',
+    body:'',
+    color_hue:STAR.color_hue||270,
+    created_at:new Date().toISOString(),
+    updated_at:new Date().toISOString()
+  };
+  ENTRIES.unshift(entry);
+  saveEntriesToStorage();
+  selectEntry(entry.id);
+  setTimeout(()=>$('entry-title').focus(),100);
+}
+
+function saveCurrentEntry(){
+  if(!currentEntryId)return;
+  const idx=ENTRIES.findIndex(e=>e.id===currentEntryId);
+  if(idx===-1)return;
+  ENTRIES[idx].title=$('entry-title').value.trim()||'Untitled';
+  ENTRIES[idx].body=$('entry-body').innerHTML;
+  ENTRIES[idx].color_hue=entryHue;
+  ENTRIES[idx].updated_at=new Date().toISOString();
+  saveEntriesToStorage();
+  renderEntriesList();
+  showAutoSaved();
+  showToast('Entry saved &#10022;');
+}
+
+/* Auto-save on typing */
+function triggerAutoSave(){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(()=>{
+    if(currentEntryId)saveCurrentEntry();
+  },1800);
+}
+
+function showAutoSaved(){
+  const el=$('auto-save-indicator');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+/* Delete */
+function confirmDelete(){if(currentEntryId)$('del-overlay').classList.add('open')}
+function closeDelete(){$('del-overlay').classList.remove('open')}
+function deleteEntry(){
+  ENTRIES=ENTRIES.filter(e=>e.id!==currentEntryId);
+  currentEntryId=null;
+  saveEntriesToStorage();
+  closeDelete();
+  $('editor-panel').style.display='none';
+  $('empty-state').style.display='flex';
+  renderEntriesList();
+  showToast('Entry removed');
+}
+
+/* ══ RICH TEXT ══ */
+function fmt(cmd,val){
+  document.execCommand(cmd,false,val||null);
+  $('entry-body').focus();
+  triggerAutoSave();
+}
+
+function updateWordCount(){
+  const text=$('entry-body').innerText||'';
+  const words=text.trim().split(/\s+/).filter(w=>w.length>0).length;
+  $('word-count').textContent=words+' word'+(words===1?'':'s');
+}
+
+$('entry-body').addEventListener('input',()=>{updateWordCount();triggerAutoSave()});
+$('entry-title').addEventListener('input',triggerAutoSave);
+
+/* ══ LOGOUT ══ */
+function doLogout(){
+  sessionStorage.removeItem('lum_session');
+  sessionStorage.removeItem('lum_current_star');
+  window.location.href='index.html';
+}
+
+/* ══ TOAST ══ */
+let _tt;
+function showToast(msg){
+  const el=$('toast');el.innerHTML=msg;el.classList.add('show');
+  clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>

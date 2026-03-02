@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luminary — Your Galaxy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02010a;--glow:#b388f0;--gold:#e2c97e;--white:#ede8ff;
+  --muted:rgba(195,182,230,0.42);--border:rgba(185,165,255,0.11);
+  --serif:'Cormorant Garamond',Georgia,serif;--sans:'Jost',system-ui,sans-serif;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+}
+html,body{min-height:100%;font-family:var(--sans);background:var(--bg);color:var(--white);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+#galaxy{position:fixed;inset:0;z-index:0;pointer-events:none}
+.orb{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:1}
+.orb-a{width:52vw;height:52vw;top:-16%;left:-9%;background:radial-gradient(circle,rgba(75,8,165,.13),transparent 70%)}
+.orb-b{width:44vw;height:44vw;bottom:-13%;right:-7%;background:radial-gradient(circle,rgba(12,25,155,.15),transparent 70%)}
+.orb-c{width:30vw;height:30vw;top:38%;left:36%;background:radial-gradient(circle,rgba(155,75,255,.07),transparent 70%)}
+@keyframes riseIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.1;transform:scale(.5)}}
+@keyframes pulseG{0%,100%{filter:drop-shadow(0 0 8px rgba(179,136,240,.45))}50%{filter:drop-shadow(0 0 24px rgba(179,136,240,.9))}}
+@keyframes starBorn{0%{opacity:0;transform:scale(0) rotate(-20deg)}60%{transform:scale(1.15) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes dotP{0%,100%{opacity:.18;transform:scale(.65)}50%{opacity:1;transform:scale(1)}}
+
+.site-nav{position:fixed;top:0;left:0;right:0;z-index:60;padding:1rem 2.2rem;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(2,1,10,.92),transparent)}
+.nav-logo{font-family:var(--serif);font-size:1.35rem;font-weight:300;letter-spacing:.15em}
+.nav-logo em{font-style:italic;color:var(--glow)}
+.nav-btn{background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--muted);font-family:var(--sans);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;padding:.38rem .95rem;cursor:pointer;transition:all .25s}
+.nav-btn:hover{color:var(--white);border-color:rgba(179,136,240,.4)}
+
+.profile-wrap{position:relative;z-index:10;max-width:900px;margin:0 auto;padding:6rem 2rem 5rem;opacity:0;animation:riseIn .85s .1s var(--ease) forwards}
+.profile-top{display:flex;flex-direction:column;align-items:center;padding-bottom:2.5rem}
+
+.avatar-wrap{position:relative;width:134px;height:134px;cursor:pointer;margin-bottom:1.45rem}
+.avatar-ring{position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(var(--glow) 0%,var(--gold) 35%,var(--glow) 65%,rgba(179,136,240,.22) 100%);animation:spin 10s linear infinite;filter:blur(.5px)}
+.avatar-disc{position:absolute;inset:4px;border-radius:50%;background:linear-gradient(148deg,#160a34,#0a1248);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;transition:filter .3s}
+.avatar-wrap:hover .avatar-disc{filter:brightness(1.13)}
+#avatar-img{width:100%;height:100%;object-fit:cover;display:none}
+.avatar-ph{display:flex;flex-direction:column;align-items:center;gap:.35rem;color:var(--muted)}
+.avatar-ph svg{width:30px;height:30px;opacity:.52}
+.avatar-ph span{font-size:.57rem;letter-spacing:.14em;text-transform:uppercase}
+.avatar-edit{position:absolute;bottom:3px;right:3px;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,rgba(90,30,192,.9),rgba(30,50,158,.9));border:1px solid rgba(179,136,240,.45);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 14px rgba(179,136,240,.38);transition:transform .2s,box-shadow .2s}
+.avatar-edit:hover{transform:scale(1.2);box-shadow:0 0 22px rgba(179,136,240,.6)}
+.avatar-edit svg{width:13px;height:13px;stroke:var(--white);fill:none;stroke-width:2.2}
+#avatar-file{display:none}
+
+.profile-name{font-family:var(--serif);font-size:2.1rem;font-weight:300;letter-spacing:.09em;text-align:center}
+.profile-email{font-size:.68rem;letter-spacing:.17em;color:var(--muted);margin-top:.28rem}
+.profile-since{font-size:.57rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(195,182,230,.2);margin-top:.2rem}
+
+.divider{display:flex;align-items:center;gap:1.3rem;margin:2.4rem 0 2rem}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-label{font-size:.59rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+
+.stars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1.7rem}
+
+.add-star-card{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;border-radius:3px;transition:transform .3s}
+.add-star-card:hover{transform:scale(1.05)}
+.add-star-card:hover .ghost-star{opacity:.5}
+.ghost-star{width:72%;max-width:110px;opacity:.18;transition:opacity .3s}
+.add-plus{position:absolute;font-size:1.55rem;font-weight:300;line-height:1;color:rgba(195,178,255,.4);text-shadow:0 0 14px rgba(179,136,240,.35);pointer-events:none;transition:color .3s}
+.add-star-card:hover .add-plus{color:rgba(195,178,255,.7)}
+.add-label{font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:.55rem;text-align:center}
+
+.star-card{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;border-radius:3px;transition:transform .35s var(--ease)}
+.star-card:hover{transform:scale(1.07) translateY(-5px)}
+.star-card:hover .star-icon-svg{filter:drop-shadow(0 0 20px rgba(179,136,240,.7))}
+.star-icon-svg{width:72%;max-width:110px;transition:filter .35s}
+.star-card-label{font-family:var(--serif);font-size:.93rem;font-weight:300;letter-spacing:.07em;color:var(--white);text-align:center;margin-top:-.5rem;padding:0 .4rem;text-shadow:0 0 12px rgba(179,136,240,.3);line-height:1.3}
+.star-card.born{animation:starBorn .78s cubic-bezier(.34,1.56,.64,1) both}
+
+#modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(2,1,10,.8);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+#modal-overlay.open{opacity:1;pointer-events:all}
+.modal{width:min(436px,94vw);padding:2.5rem 2.2rem;background:linear-gradient(148deg,rgba(22,4,48,.94),rgba(7,14,56,.92));border:1px solid var(--border);border-radius:3px;backdrop-filter:blur(34px);box-shadow:0 0 100px rgba(10,2,42,.9),inset 0 1px 0 rgba(255,255,255,.05);transform:translateY(18px);transition:transform .42s var(--ease)}
+#modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:var(--serif);font-size:1.6rem;font-weight:300;font-style:italic;text-align:center;margin-bottom:.2rem}
+.modal-sub{text-align:center;font-size:.59rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:1.6rem}
+.modal-preview{display:flex;justify-content:center;margin-bottom:1.4rem}
+.modal-preview svg{width:80px;animation:pulseG 2.2s ease-in-out infinite}
+.modal-field{display:flex;flex-direction:column;gap:.38rem;margin-bottom:1.15rem}
+.modal-field label{font-size:.59rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.modal-field input{background:rgba(255,255,255,.038);border:1px solid var(--border);border-radius:2px;padding:.73rem .95rem;width:100%;color:var(--white);font-family:var(--sans);font-size:.9rem;font-weight:300;outline:none;transition:border-color .25s,box-shadow .25s}
+.modal-field input::placeholder{color:rgba(195,182,230,.18)}
+.modal-field input:focus{border-color:rgba(179,136,240,.5);box-shadow:0 0 0 3px rgba(179,136,240,.06)}
+.color-row-label{font-size:.59rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem}
+.color-row{display:flex;gap:.58rem;flex-wrap:wrap;margin-bottom:1.45rem}
+.color-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .2s,border-color .2s}
+.color-dot:hover{transform:scale(1.2)}.color-dot.active{border-color:var(--white);transform:scale(1.22)}
+.modal-actions{display:flex;gap:.95rem}
+.btn-cancel{flex:1;padding:.73rem;background:transparent;border:1px solid var(--border);border-radius:2px;color:var(--muted);font-family:var(--sans);font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .25s}
+.btn-cancel:hover{border-color:rgba(179,136,240,.32);color:var(--white)}
+.btn-ignite{flex:1;padding:.73rem;background:linear-gradient(135deg,rgba(90,38,196,.48),rgba(26,36,114,.48));border:1px solid rgba(179,136,240,.36);border-radius:2px;color:var(--white);font-family:var(--sans);font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .3s}
+.btn-ignite:hover{border-color:rgba(179,136,240,.72);box-shadow:0 0 22px rgba(179,136,240,.18)}
+
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(16px);background:linear-gradient(135deg,rgba(20,4,48,.97),rgba(6,14,56,.97));border:1px solid var(--border);border-radius:3px;padding:.68rem 1.9rem;font-size:.68rem;letter-spacing:.1em;color:var(--white);z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loading-dots{display:flex;gap:7px;justify-content:center;padding:2.5rem 0}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--glow);animation:dotP 1.3s ease-in-out infinite}
+.loading-dots span:nth-child(2){animation-delay:.22s}.loading-dots span:nth-child(3){animation-delay:.44s}
+</style>
+</head>
+<body>
+<canvas id="galaxy"></canvas>
+<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
+
+<nav class="site-nav">
+  <div class="nav-logo"><em>Luminary</em></div>
+  <button class="nav-btn" onclick="doLogout()">Log Out</button>
+</nav>
+
+<div class="profile-wrap">
+  <div class="profile-top">
+    <div class="avatar-wrap" onclick="document.getElementById('avatar-file').click()" title="Change photo">
+      <div class="avatar-ring"></div>
+      <div class="avatar-disc">
+        <img id="avatar-img" src="" alt="">
+        <div class="avatar-ph" id="avatar-ph">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          <span>Add Photo</span>
+        </div>
+      </div>
+      <div class="avatar-edit">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+      </div>
+    </div>
+    <input type="file" id="avatar-file" accept="image/*" onchange="uploadAvatar(this)">
+    <h1 class="profile-name" id="profile-name">-</h1>
+    <p class="profile-email" id="profile-email">-</p>
+    <p class="profile-since" id="profile-since"></p>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span class="divider-label">&#10022; &nbsp; Your Constellations &nbsp; &#10022;</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="stars-grid" id="stars-grid">
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<div id="modal-overlay" onclick="closeMaybe(event)">
+  <div class="modal">
+    <h2 class="modal-title">Name Your Star</h2>
+    <p class="modal-sub">Every constellation needs a name</p>
+    <div class="modal-preview">
+      <svg id="modal-star-svg" viewBox="0 0 100 95" xmlns="http://www.w3.org/2000/svg">
+        <polygon id="modal-star-poly" points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="rgba(179,136,240,.18)" stroke="rgba(179,136,240,.85)" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="modal-field">
+      <label>Constellation name</label>
+      <input type="text" id="modal-star-name" placeholder="e.g. Midnight Thoughts, Dreams..." maxlength="120">
+    </div>
+    <p class="color-row-label">Star colour</p>
+    <div class="color-row" id="color-row"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-ignite" onclick="createStar()">Ignite &#10022;</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// Galaxy
+(function(){
+  const cv=document.getElementById('galaxy'),cx=cv.getContext('2d');
+  let W,H,S=[],C=[];
+  const R=(a,b)=>a+Math.random()*(b-a);
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;build()}
+  function build(){
+    S=[];
+    for(let i=0,n=Math.floor(W*H/1650);i<n;i++){
+      const b=Math.random()<.07;
+      S.push({x:R(0,W),y:R(0,H),r:b?R(.85,2):R(.18,.82),a:R(.28,1),sp:R(.004,.018),of:R(0,Math.PI*2),c:Math.random()<.13?'#e2c97e':'#ede8ff'});
+    }
+    C=[];
+    for(let c=0;c<8;c++){
+      const px=R(55,W-55),py=R(55,H-55),pts=[];
+      for(let i=0;i<Math.floor(R(4,7));i++) pts.push({x:px+R(-100,100),y:py+R(-80,80)});
+      C.push(pts);
+    }
+  }
+  function draw(t){
+    const g=cx.createRadialGradient(W*.44,H*.41,0,W*.5,H*.5,Math.max(W,H)*.76);
+    g.addColorStop(0,'#0c0422');g.addColorStop(.5,'#050210');g.addColorStop(1,'#02010a');
+    cx.fillStyle=g;cx.fillRect(0,0,W,H);
+    const nb=cx.createRadialGradient(W*.2,H*.28,0,W*.2,H*.28,W*.3);
+    nb.addColorStop(0,'rgba(80,6,170,.065)');nb.addColorStop(1,'transparent');
+    cx.fillStyle=nb;cx.fillRect(0,0,W,H);
+    C.forEach(pts=>{
+      cx.beginPath();pts.forEach((p,i)=>i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y));
+      cx.strokeStyle='rgba(176,156,255,.052)';cx.lineWidth=.5;cx.stroke();
+      pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,1.05,0,Math.PI*2);cx.fillStyle='rgba(195,178,255,.28)';cx.fill()});
+    });
+    S.forEach(s=>{
+      cx.globalAlpha=Math.max(.04,.2+.8*Math.abs(Math.sin(t*s.sp+s.of))*s.a);
+      cx.fillStyle=s.c;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();cx.globalAlpha=1;
+    });
+    if(Math.random()<.00045){
+      const sx=R(0,W*.72),sy=R(0,H*.5),len=R(85,210);
+      const sg=cx.createLinearGradient(sx,sy,sx+len,sy+len*.38);
+      sg.addColorStop(0,'rgba(255,255,255,0)');sg.addColorStop(.7,'rgba(255,255,255,.52)');sg.addColorStop(1,'rgba(255,255,255,0)');
+      cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(sx+len,sy+len*.38);cx.strokeStyle=sg;cx.lineWidth=1.1;cx.stroke();
+    }
+  }
+  window.addEventListener('resize',resize);resize();
+  (function loop(t){draw(t);requestAnimationFrame(loop)})();
+})();
+
+// Profile logic
+const LIVE=false;
+const $=id=>document.getElementById(id);
+const esc=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
+
+let SESSION=null;
+try{SESSION=JSON.parse(sessionStorage.getItem('lum_session')||'null')}catch{}
+if(!SESSION)window.location.replace('index.html');
+
+let STARS=[];
+
+const PALETTE=[
+  {h:270,name:'Violet'},{h:198,name:'Sapphire'},{h:28,name:'Amber'},
+  {h:338,name:'Rose'},{h:156,name:'Emerald'},{h:2,name:'Crimson'},{h:182,name:'Aqua'}
+];
+let chosenHue=270;
+
+function makeStar(hue){
+  return '<svg class="star-icon-svg" viewBox="0 0 100 95" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="hsla('+hue+',60%,55%,0.18)" stroke="hsla('+hue+',80%,72%,0.9)" stroke-width="1.5"/></svg>';
+}
+function ghostStar(){
+  return '<svg class="ghost-star" viewBox="0 0 100 95" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35" fill="rgba(195,178,255,0.05)" stroke="rgba(195,178,255,0.26)" stroke-width="1.5"/></svg>';
+}
+
+function buildHeader(){
+  $('profile-name').textContent=(SESSION.first_name+' '+SESSION.last_name).trim();
+  $('profile-email').textContent=SESSION.email;
+  if(SESSION.joined){
+    const d=new Date(SESSION.joined);
+    $('profile-since').textContent='Member since '+d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  }
+  if(SESSION.avatar){
+    $('avatar-img').src=SESSION.avatar;$('avatar-img').style.display='block';$('avatar-ph').style.display='none';
+  }
+}
+
+async function loadStars(){
+  if(LIVE){
+    try{const d=await(await fetch('php/stars.php')).json();STARS=d.stars||[]}catch{STARS=[]}
+  }else{
+    try{STARS=JSON.parse(localStorage.getItem('lum_stars_'+SESSION.email)||'[]')}catch{STARS=[]}
+  }
+  renderStars();
+}
+
+function renderStars(){
+  const grid=$('stars-grid');
+  grid.innerHTML='';
+  const add=document.createElement('div');
+  add.className='add-star-card';add.title='Create a new constellation';add.onclick=openModal;
+  add.innerHTML=ghostStar()+'<div class="add-plus">+</div><p class="add-label">Add your star</p>';
+  grid.appendChild(add);
+  STARS.forEach(star=>{
+    const card=document.createElement('div');
+    card.className='star-card';card.title=star.star_name;card.onclick=()=>openStar(star);
+    card.innerHTML=makeStar(star.color_hue)+'<p class="star-card-label">'+esc(star.star_name)+'</p>';
+    grid.appendChild(card);
+  });
+}
+
+function openStar(star){
+  sessionStorage.setItem('lum_current_star',JSON.stringify(star));
+  window.location.href='notes.html';
+}
+
+function openModal(){
+  $('modal-star-name').value='';chosenHue=270;buildColorPicker();refreshModalStar();
+  $('modal-overlay').classList.add('open');
+  setTimeout(()=>$('modal-star-name').focus(),300);
+}
+function closeModal(){$('modal-overlay').classList.remove('open')}
+function closeMaybe(e){if(e.target===$('modal-overlay'))closeModal()}
+
+function buildColorPicker(){
+  const row=$('color-row');row.innerHTML='';
+  PALETTE.forEach(({h,name})=>{
+    const dot=document.createElement('div');
+    dot.className='color-dot'+(h===chosenHue?' active':'');dot.title=name;
+    dot.style.cssText='background:hsl('+h+',70%,55%);box-shadow:0 0 9px hsla('+h+',80%,60%,0.5)';
+    dot.onclick=()=>{chosenHue=h;buildColorPicker();refreshModalStar()};
+    row.appendChild(dot);
+  });
+}
+function refreshModalStar(){
+  const poly=$('modal-star-poly');
+  poly.setAttribute('fill','hsla('+chosenHue+',60%,55%,0.2)');
+  poly.setAttribute('stroke','hsla('+chosenHue+',80%,70%,0.88)');
+  $('modal-star-svg').style.filter='drop-shadow(0 0 18px hsla('+chosenHue+',82%,65%,0.58))';
+}
+
+async function createStar(){
+  const name=$('modal-star-name').value.trim();
+  if(!name){$('modal-star-name').focus();return}
+  let star;
+  if(LIVE){
+    try{
+      const d=await(await fetch('php/stars.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({star_name:name,color_hue:chosenHue})})).json();
+      if(!d.success){showToast('Could not save star.');return}star=d.star;
+    }catch{showToast('Connection error.');return}
+  }else{
+    star={id:Date.now(),star_name:name,color_hue:chosenHue,created_at:new Date().toISOString()};
+    STARS.push(star);
+    localStorage.setItem('lum_stars_'+SESSION.email,JSON.stringify(STARS));
+  }
+  closeModal();renderStars();
+  const cards=document.querySelectorAll('.star-card');
+  const newest=cards[cards.length-1];
+  if(newest){newest.classList.add('born');newest.addEventListener('animationend',()=>newest.classList.remove('born'),{once:true})}
+  showToast('Your star has been born: '+name);
+}
+
+async function uploadAvatar(input){
+  const file=input.files[0];if(!file)return;
+  const url=URL.createObjectURL(file);
+  $('avatar-img').src=url;$('avatar-img').style.display='block';$('avatar-ph').style.display='none';
+  if(LIVE){
+    const fd=new FormData();fd.append('avatar',file);
+    try{
+      const d=await(await fetch('php/upload_avatar.php',{method:'POST',body:fd})).json();
+      if(d.success){SESSION.avatar=d.avatar_url;sessionStorage.setItem('lum_session',JSON.stringify(SESSION));showToast('Profile photo updated')}
+      else showToast('Upload failed');
+    }catch{showToast('Upload error')}
+  }else showToast('Profile photo updated (demo)');
+}
+
+function doLogout(){
+  sessionStorage.removeItem('lum_session');
+  if(LIVE)window.location.href='php/logout.php';
+  else window.location.href='index.html';
+}
+
+let _tt;
+function showToast(msg){
+  const el=$('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+buildHeader();buildColorPicker();loadStars();
+</script>
+</body>
+</html>

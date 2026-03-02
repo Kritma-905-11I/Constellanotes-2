@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luminary</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02010a;--glow:#b388f0;--gold:#e2c97e;--white:#ede8ff;
+  --muted:rgba(195,182,230,0.42);--border:rgba(185,165,255,0.11);
+  --err:#e87878;--ok:#88cca0;
+  --serif:'Cormorant Garamond',Georgia,serif;--sans:'Jost',system-ui,sans-serif;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--white);overflow:hidden;-webkit-font-smoothing:antialiased}
+#galaxy{position:fixed;inset:0;z-index:0;pointer-events:none}
+.orb{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:1}
+.orb-a{width:52vw;height:52vw;top:-16%;left:-9%;background:radial-gradient(circle,rgba(75,8,165,.13),transparent 70%)}
+.orb-b{width:44vw;height:44vw;bottom:-13%;right:-7%;background:radial-gradient(circle,rgba(12,25,155,.15),transparent 70%)}
+.orb-c{width:30vw;height:30vw;top:38%;left:36%;background:radial-gradient(circle,rgba(155,75,255,.07),transparent 70%)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes riseIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.1;transform:scale(.5)}}
+#splash{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;transition:opacity .9s var(--ease),transform .9s var(--ease)}
+#splash.leaving{opacity:0;transform:scale(.96);pointer-events:none}
+.splash-title{font-family:var(--serif);font-size:clamp(3rem,7.5vw,5.8rem);font-weight:300;letter-spacing:.2em;opacity:0;animation:fadeIn 1.3s .4s forwards}
+.splash-title em{font-style:italic;color:var(--glow);text-shadow:0 0 40px rgba(179,136,240,.5)}
+.splash-sub{font-size:.68rem;letter-spacing:.38em;text-transform:uppercase;color:var(--muted);margin-top:.5rem;opacity:0;animation:fadeIn 1s 1s forwards}
+.sparkle-row{display:flex;align-items:center;gap:.85rem;margin-top:2.8rem;opacity:0;animation:fadeIn .9s 1.7s forwards}
+.spark{border-radius:50%;animation:blink 1.4s infinite}
+.sp1{width:5px;height:5px;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.sp2{width:3px;height:3px;background:var(--glow);box-shadow:0 0 8px var(--glow);animation-delay:.3s}
+.sp3{width:6px;height:6px;background:var(--gold);box-shadow:0 0 12px var(--gold);animation-delay:.7s}
+.sp4{width:3px;height:3px;background:var(--glow);box-shadow:0 0 8px var(--glow);animation-delay:.15s}
+.sp5{width:4px;height:4px;background:var(--gold);box-shadow:0 0 10px var(--gold);animation-delay:.55s}
+.sp6{width:3px;height:3px;background:var(--glow);box-shadow:0 0 8px var(--glow);animation-delay:.9s}
+.sp7{width:5px;height:5px;background:var(--gold);box-shadow:0 0 10px var(--gold);animation-delay:.4s}
+.splash-cta{font-family:var(--serif);font-style:italic;font-weight:300;font-size:1.2rem;color:var(--muted);margin-top:2.8rem;opacity:0;animation:fadeIn 1s 2.3s forwards}
+.splash-enter{margin-top:1.2rem;padding:.72rem 3.2rem;background:transparent;border:1px solid rgba(179,136,240,.3);border-radius:2px;color:var(--glow);font-family:var(--sans);font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;cursor:pointer;opacity:0;animation:fadeIn .8s 2.8s forwards;transition:background .3s,border-color .3s,box-shadow .3s}
+.splash-enter:hover{background:rgba(179,136,240,.07);border-color:var(--glow);box-shadow:0 0 24px rgba(179,136,240,.2)}
+#auth-panel{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .7s var(--ease)}
+#auth-panel.visible{opacity:1;pointer-events:all}
+.card{width:min(464px,94vw);padding:2.8rem 2.6rem;background:linear-gradient(148deg,rgba(22,4,46,.78),rgba(7,14,55,.74));border:1px solid var(--border);border-radius:3px;backdrop-filter:blur(30px);box-shadow:0 0 100px rgba(12,2,42,.85),inset 0 1px 0 rgba(255,255,255,.05);animation:riseIn .65s var(--ease) both}
+.card-logo{font-family:var(--serif);font-size:1.85rem;font-weight:300;letter-spacing:.14em;text-align:center;margin-bottom:.2rem}
+.card-logo em{font-style:italic;color:var(--glow)}
+.card-tag{text-align:center;font-size:.64rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-bottom:1.9rem}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.85rem}
+.tab{flex:1;background:transparent;border:none;padding:.62rem;font-family:var(--sans);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:color .25s;position:relative}
+.tab::after{content:'';position:absolute;bottom:-1px;left:16%;right:16%;height:1px;background:var(--glow);box-shadow:0 0 8px var(--glow);transform:scaleX(0);transition:transform .3s var(--ease)}
+.tab.active{color:var(--white)}.tab.active::after{transform:scaleX(1)}
+.auth-form{display:none;flex-direction:column;gap:1.05rem}
+.auth-form.active{display:flex;animation:riseIn .4s var(--ease)}
+.field{display:flex;flex-direction:column;gap:.38rem}
+.field label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.field input{background:rgba(255,255,255,.038);border:1px solid var(--border);border-radius:2px;padding:.73rem .95rem;width:100%;color:var(--white);font-family:var(--sans);font-size:.88rem;font-weight:300;outline:none;transition:border-color .25s,box-shadow .25s}
+.field input::placeholder{color:rgba(195,182,230,.18)}
+.field input:focus{border-color:rgba(179,136,240,.48);box-shadow:0 0 0 3px rgba(179,136,240,.06)}
+.field input.is-err{border-color:var(--err)}
+.field-err{font-size:.59rem;color:var(--err);display:none}.field-err.show{display:block}
+.field-hint{font-size:.59rem;color:var(--muted)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.pw-wrap{position:relative}.pw-wrap input{padding-right:2.7rem}
+.pw-toggle{position:absolute;right:.78rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-family:var(--sans);font-size:.68rem;cursor:pointer;transition:color .2s;padding:0}
+.pw-toggle:hover{color:var(--glow)}
+.str-track{height:2px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:.3rem}
+.str-bar{height:100%;width:0;transition:width .38s,background .38s}
+.str-text{font-size:.57rem;color:var(--muted);margin-top:.18rem}
+.srv-msg{display:none;text-align:center;font-size:.68rem;letter-spacing:.06em;padding:.44rem;border-radius:2px}
+.srv-msg.show{display:block}.srv-msg.is-err{color:var(--err);background:rgba(232,120,120,.07)}.srv-msg.is-ok{color:var(--ok);background:rgba(136,204,160,.07)}
+.btn-submit{margin-top:.3rem;padding:.9rem;background:linear-gradient(135deg,rgba(90,40,180,.4),rgba(25,35,112,.4));border:1px solid rgba(179,136,240,.3);border-radius:2px;color:var(--white);font-family:var(--sans);font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:all .3s}
+.btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(179,136,240,.12),transparent);opacity:0;transition:opacity .3s}
+.btn-submit:hover:not(:disabled)::before{opacity:1}
+.btn-submit:hover:not(:disabled){border-color:rgba(179,136,240,.62);box-shadow:0 0 28px rgba(179,136,240,.15),0 4px 20px rgba(0,0,0,.35);transform:translateY(-1px)}
+.btn-submit:disabled{opacity:.42;cursor:not-allowed}
+#welcome{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;background:transparent;opacity:0;pointer-events:none;transition:opacity .7s var(--ease)}
+#welcome.show{opacity:1;pointer-events:all}
+.w-sparks{display:flex;gap:.75rem;margin-bottom:2.2rem}
+.ws{border-radius:50%;animation:blink 1.5s infinite}
+.ws1{width:4px;height:4px;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.ws2{width:3px;height:3px;background:var(--glow);box-shadow:0 0 8px var(--glow);animation-delay:.4s}
+.ws3{width:5px;height:5px;background:var(--gold);box-shadow:0 0 12px var(--gold);animation-delay:.8s}
+.ws4{width:3px;height:3px;background:var(--glow);box-shadow:0 0 8px var(--glow);animation-delay:.2s}
+.ws5{width:4px;height:4px;background:var(--gold);box-shadow:0 0 10px var(--gold);animation-delay:.6s}
+.ws6{width:3px;height:3px;background:var(--glow);box-shadow:0 0 8px var(--glow);animation-delay:1s}
+.w-line{font-family:var(--serif);font-weight:300;opacity:0;transform:translateY(16px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.w-line.reveal{opacity:1;transform:none}
+#w-greeting{font-size:clamp(1.2rem,3vw,2rem);font-style:italic;color:var(--muted);letter-spacing:.06em}
+#w-name{font-size:clamp(3.2rem,9vw,6.5rem);letter-spacing:.12em;color:var(--white);text-shadow:0 0 55px rgba(179,136,240,.35);margin-top:-.1rem;transition-delay:.22s}
+#w-sub{font-size:.66rem;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-top:1.3rem;font-family:var(--sans);transition-delay:.45s}
+</style>
+</head>
+<body>
+<canvas id="galaxy"></canvas>
+<div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
+
+<div id="splash">
+  <h1 class="splash-title"><em>Luminary</em></h1>
+  <p class="splash-sub">Your private universe of words</p>
+  <div class="sparkle-row">
+    <div class="spark sp1"></div><div class="spark sp2"></div><div class="spark sp3"></div>
+    <div class="spark sp4"></div><div class="spark sp5"></div><div class="spark sp6"></div>
+    <div class="spark sp7"></div>
+  </div>
+  <p class="splash-cta">Ready to begin your journey?</p>
+  <button class="splash-enter" onclick="enterApp()">Enter &#10022;</button>
+</div>
+
+<div id="auth-panel">
+  <div class="card">
+    <div class="card-logo"><em>Luminary</em></div>
+    <p class="card-tag">Story journals &amp; private notes</p>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login',this)">Log In</button>
+      <button class="tab" onclick="switchTab('signup',this)">Sign Up</button>
+    </div>
+    <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+        <span class="field-err" id="login-email-err">Please enter a valid email.</span>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="login-pass" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('login-pass',this)">show</button>
+        </div>
+        <span class="field-err" id="login-pass-err">Password is required.</span>
+      </div>
+      <div class="srv-msg" id="login-srv"></div>
+      <button type="submit" class="btn-submit" id="login-btn">Welcome Back &#10022;</button>
+    </form>
+    <form id="signup-form" class="auth-form" onsubmit="handleSignup(event)">
+      <div class="two-col">
+        <div class="field">
+          <label>First name</label>
+          <input type="text" id="signup-fn" placeholder="Aurora" autocomplete="given-name">
+          <span class="field-err" id="signup-fn-err">Required.</span>
+        </div>
+        <div class="field">
+          <label>Last name</label>
+          <input type="text" id="signup-ln" placeholder="Voss" autocomplete="family-name">
+          <span class="field-err" id="signup-ln-err">Required.</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Date of birth</label>
+        <input type="date" id="signup-dob" autocomplete="bday">
+        <span class="field-err" id="signup-dob-err">Date of birth is required.</span>
+      </div>
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="signup-email" placeholder="your@email.com" autocomplete="email">
+        <span class="field-hint">Phone number can be added later as backup.</span>
+        <span class="field-err" id="signup-email-err">Please enter a valid email.</span>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="signup-pw" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" oninput="checkStrength(this.value)" autocomplete="new-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('signup-pw',this)">show</button>
+        </div>
+        <div class="str-track"><div class="str-bar" id="str-bar"></div></div>
+        <span class="str-text" id="str-text"></span>
+        <span class="field-err" id="signup-pw-err">At least 8 characters required.</span>
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <div class="pw-wrap">
+          <input type="password" id="signup-pw2" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('signup-pw2',this)">show</button>
+        </div>
+        <span class="field-err" id="signup-pw2-err">Passwords do not match.</span>
+      </div>
+      <div class="srv-msg" id="signup-srv"></div>
+      <button type="submit" class="btn-submit" id="signup-btn">Begin Your Story &#10022;</button>
+    </form>
+  </div>
+</div>
+
+<div id="welcome">
+  <div class="w-sparks">
+    <div class="ws ws1"></div><div class="ws ws2"></div><div class="ws ws3"></div>
+    <div class="ws ws4"></div><div class="ws ws5"></div><div class="ws ws6"></div>
+  </div>
+  <p class="w-line" id="w-greeting"></p>
+  <h2 class="w-line" id="w-name"></h2>
+  <p class="w-line" id="w-sub"></p>
+</div>
+
+<script>
+(function(){
+  const cv=document.getElementById('galaxy'),cx=cv.getContext('2d');
+  let W,H,S=[],C=[];
+  const R=(a,b)=>a+Math.random()*(b-a);
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;build()}
+  function build(){
+    S=[];
+    for(let i=0,n=Math.floor(W*H/1650);i<n;i++){
+      const b=Math.random()<.07;
+      S.push({x:R(0,W),y:R(0,H),r:b?R(.85,2):R(.18,.82),a:R(.28,1),sp:R(.004,.018),of:R(0,Math.PI*2),c:Math.random()<.13?'#e2c97e':'#ede8ff'});
+    }
+    C=[];
+    for(let c=0;c<8;c++){
+      const px=R(55,W-55),py=R(55,H-55),pts=[];
+      for(let i=0;i<Math.floor(R(4,7));i++) pts.push({x:px+R(-100,100),y:py+R(-80,80)});
+      C.push(pts);
+    }
+  }
+  function draw(t){
+    const g=cx.createRadialGradient(W*.44,H*.41,0,W*.5,H*.5,Math.max(W,H)*.76);
+    g.addColorStop(0,'#0c0422');g.addColorStop(.5,'#050210');g.addColorStop(1,'#02010a');
+    cx.fillStyle=g;cx.fillRect(0,0,W,H);
+    const nb=cx.createRadialGradient(W*.2,H*.28,0,W*.2,H*.28,W*.3);
+    nb.addColorStop(0,'rgba(80,6,170,.065)');nb.addColorStop(1,'transparent');
+    cx.fillStyle=nb;cx.fillRect(0,0,W,H);
+    C.forEach(pts=>{
+      cx.beginPath();pts.forEach((p,i)=>i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y));
+      cx.strokeStyle='rgba(176,156,255,.052)';cx.lineWidth=.5;cx.stroke();
+      pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,1.05,0,Math.PI*2);cx.fillStyle='rgba(195,178,255,.28)';cx.fill()});
+    });
+    S.forEach(s=>{
+      cx.globalAlpha=Math.max(.04,.2+.8*Math.abs(Math.sin(t*s.sp+s.of))*s.a);
+      cx.fillStyle=s.c;cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();cx.globalAlpha=1;
+    });
+    if(Math.random()<.00045){
+      const sx=R(0,W*.72),sy=R(0,H*.5),len=R(85,210);
+      const sg=cx.createLinearGradient(sx,sy,sx+len,sy+len*.38);
+      sg.addColorStop(0,'rgba(255,255,255,0)');sg.addColorStop(.7,'rgba(255,255,255,.52)');sg.addColorStop(1,'rgba(255,255,255,0)');
+      cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(sx+len,sy+len*.38);cx.strokeStyle=sg;cx.lineWidth=1.1;cx.stroke();
+    }
+  }
+  window.addEventListener('resize',resize);resize();
+  (function loop(t){draw(t);requestAnimationFrame(loop)})();
+})();
+
+const LIVE=false;
+const $=id=>document.getElementById(id);
+const isEmail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+function fieldErr(inp,err,show){$(err).classList.toggle('show',show);$(inp)?.classList.toggle('is-err',show);return show}
+function srvMsg(id,txt,t){const e=$(id);e.textContent=txt;e.className='srv-msg show is-'+t}
+function enterApp(){$('splash').classList.add('leaving');$('auth-panel').classList.add('visible');setTimeout(()=>$('splash').style.display='none',950)}
+function switchTab(w,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  $(w+'-form').classList.add('active');
+}
+function togglePw(id,btn){const i=$(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'show':'hide'}
+function checkStrength(v){
+  let s=0;if(v.length>=8)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;
+  const lv=[{w:0,bg:'',t:''},{w:25,bg:'#e87878',t:'Weak'},{w:50,bg:'#e8c46a',t:'Fair'},{w:75,bg:'#88cca0',t:'Good'},{w:100,bg:'#b388f0',t:'Strong'}][s];
+  $('str-bar').style.cssText='width:'+lv.w+'%;background:'+lv.bg;$('str-text').textContent=lv.t;
+}
+async function handleLogin(e){
+  e.preventDefault();
+  const em=$('login-email').value.trim(),pw=$('login-pass').value;
+  let bad=false;
+  if(!isEmail(em)){fieldErr('login-email','login-email-err',true);bad=true}else fieldErr('login-email','login-email-err',false);
+  if(!pw){fieldErr('login-pass','login-pass-err',true);bad=true}else fieldErr('login-pass','login-pass-err',false);
+  if(bad)return;
+  const btn=$('login-btn');btn.disabled=true;btn.textContent='Entering your universe...';
+  if(LIVE){
+    const fd=new FormData();fd.append('email',em);fd.append('password',pw);
+    try{
+      const d=await(await fetch('php/login.php',{method:'POST',body:fd})).json();
+      if(d.success){saveSession(d);showWelcome(d.first_name,false)}
+      else{srvMsg('login-srv',d.message,'err');btn.disabled=false;btn.textContent='Welcome Back'}
+    }catch{srvMsg('login-srv','Connection error.','err');btn.disabled=false;btn.textContent='Welcome Back'}
+  }else{
+    const fn=em.split('@')[0],name=fn.charAt(0).toUpperCase()+fn.slice(1);
+    saveSession({first_name:name,last_name:'',email:em,avatar:null});
+    showWelcome(name,false);
+  }
+}
+async function handleSignup(e){
+  e.preventDefault();
+  const fn=$('signup-fn').value.trim(),ln=$('signup-ln').value.trim(),dob=$('signup-dob').value,
+        em=$('signup-email').value.trim(),pw=$('signup-pw').value,pw2=$('signup-pw2').value;
+  let bad=false;
+  if(!fn){fieldErr('signup-fn','signup-fn-err',true);bad=true}else fieldErr('signup-fn','signup-fn-err',false);
+  if(!ln){fieldErr('signup-ln','signup-ln-err',true);bad=true}else fieldErr('signup-ln','signup-ln-err',false);
+  if(!dob){fieldErr('signup-dob','signup-dob-err',true);bad=true}else fieldErr('signup-dob','signup-dob-err',false);
+  if(!isEmail(em)){fieldErr('signup-email','signup-email-err',true);bad=true}else fieldErr('signup-email','signup-email-err',false);
+  if(pw.length<8){fieldErr('signup-pw','signup-pw-err',true);bad=true}else fieldErr('signup-pw','signup-pw-err',false);
+  if(pw!==pw2){fieldErr('signup-pw2','signup-pw2-err',true);bad=true}else fieldErr('signup-pw2','signup-pw2-err',false);
+  if(bad)return;
+  const btn=$('signup-btn');btn.disabled=true;btn.textContent='Creating your universe...';
+  if(LIVE){
+    const fd=new FormData();fd.append('first_name',fn);fd.append('last_name',ln);fd.append('dob',dob);fd.append('email',em);fd.append('password',pw);fd.append('confirm_password',pw2);
+    try{
+      const d=await(await fetch('php/signup.php',{method:'POST',body:fd})).json();
+      if(d.success){saveSession({first_name:fn,last_name:ln,email:em,avatar:null});showWelcome(fn,true)}
+      else{srvMsg('signup-srv',d.message,'err');btn.disabled=false;btn.textContent='Begin Your Story'}
+    }catch{srvMsg('signup-srv','Connection error.','err');btn.disabled=false;btn.textContent='Begin Your Story'}
+  }else{
+    saveSession({first_name:fn,last_name:ln,email:em,avatar:null});
+    showWelcome(fn,true);
+  }
+}
+function saveSession(d){
+  sessionStorage.setItem('lum_session',JSON.stringify({first_name:d.first_name,last_name:d.last_name||'',email:d.email,avatar:d.avatar||null,joined:new Date().toISOString()}));
+}
+function showWelcome(name,isNew){
+  const panel=$('auth-panel');
+  panel.style.transition='opacity .55s ease,transform .55s ease';
+  panel.style.opacity='0';panel.style.transform='translateY(-18px) scale(.97)';
+  $('w-greeting').textContent=isNew?'Hello,':'Welcome back,';
+  $('w-name').textContent=name;
+  $('w-sub').textContent=isNew?'Your universe begins now':'Your stories have missed you';
+  setTimeout(()=>{
+    panel.style.display='none';
+    const w=$('welcome');w.classList.add('show');
+    requestAnimationFrame(()=>{
+      setTimeout(()=>$('w-greeting').classList.add('reveal'),80);
+      setTimeout(()=>$('w-name').classList.add('reveal'),260);
+      setTimeout(()=>$('w-sub').classList.add('reveal'),520);
+    });
+    setTimeout(()=>{
+      w.style.transition='opacity .75s ease';w.style.opacity='0';
+      setTimeout(()=>window.location.href='profile.html',800);
+    },2900);
+  },580);
+}
+</script>
+</body>
+</html>
